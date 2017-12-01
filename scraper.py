@@ -3,6 +3,7 @@ import os
 import ccxt
 import pandas as pd 
 import time, datetime
+import scraperwiki 
 
 import sqlite3
 from sqlite3 import Error
@@ -66,7 +67,6 @@ exmo_bgtcn   = ccxt.exmo({
 })
 
 
-
 def get_orderbook(ccxtobj,symbol,sourcename,connexion):
 	dictbook = ccxtobj.fetch_order_book(symbol)
 	print(dictbook['asks'][0])
@@ -76,9 +76,16 @@ def get_orderbook(ccxtobj,symbol,sourcename,connexion):
 	b['rank']=b.index.values
 	df = pd.merge(a,b,on='rank')
 	df['source']=sourcename
+	
 	df.index = [str(dictbook['timestamp']) for  r in df['rank']] #+"_"+str(r)
 	# record in DB
-	df.to_sql('orderbooks',connexion,if_exists='append')
+	#df.to_sql('orderbooks',connexion,if_exists='append')
+	
+	# for morph.io
+	df['timestamp']=df.index
+	for k in range(len(df)):
+		print(df[k].to_dict())
+		scraperwiki.sqlite.save(unique_keys=['timestamp'], data=df.iloc[k].to_dict())
 
 i=0
 while (i<5):
@@ -90,72 +97,6 @@ while (i<5):
 	
 	time.sleep(2)
 	i+=1
-	
-	"""
-	## ANX
-	#anx_markets = anx.load_markets()
-	#print(anx.id, anx_markets)
-	#print(anx.fetch_order_book(anx.symbols[0]))	
-	
-	dictbook = anx.fetch_order_book(anx.symbols[0])
-	pd.DataFrame(dictbook['bids'],columns=['price','qty'])
-	a = pd.DataFrame(dictbook['asks'],columns=['askprice','askqty'])
-	a['rank']=a.index.values
-	b = pd.DataFrame(dictbook['bids'],columns=['bidprice','bidqty'])
-	b['rank']=b.index.values
-	df_anx = pd.merge(a,b,on='rank')
-	df_anx['source']='anx'
-	df_anx.index = [str(dictbook['timestamp']) for  r in df_anx['rank']] #+"_"+str(r)
-	# record in DB
-	df_anx.to_sql('orderbooks',conn,if_exists='append')
-
-	
-	##POLONIEX 
-	#polo_markets = polo.load_markets()
-	#print(polo.id, polo_markets)
-	#print(polo.fetch_order_book("BTC/USDT"))
-	dictbook = polo.fetch_order_book("BTC/USDT")
-	a = pd.DataFrame(dictbook['asks'],columns=['askprice','askqty'])
-	a['rank']=a.index.values
-	b = pd.DataFrame(dictbook['bids'],columns=['bidprice','bidqty'])
-	b['rank']=b.index.values
-	df_polo = pd.merge(a,b,on='rank')
-	df_polo['source']='poloniex'
-	df_polo.index = [str(dictbook['timestamp']) for  r in df_polo['rank']] #+"_"+str(r)
-	# record in DB
-	df_polo.to_sql('orderbooks',conn,if_exists='append')
-	
-	##BitMex
-	#bmex_markets = bmex.load_markets()
-	#print(bmex.id, bmex_markets)
-	#print(bmex.fetch_order_book("BTC/USD"))
-	dictbook = bmex.fetch_order_book("BTC/USD")
-	a = pd.DataFrame(dictbook['asks'],columns=['askprice','askqty'])
-	a['rank']=a.index.values
-	b = pd.DataFrame(dictbook['bids'],columns=['bidprice','bidqty'])
-	b['rank']=b.index.values
-	df_bmex = pd.merge(a,b,on='rank')
-	df_bmex['source']='bitmex'
-	df_bmex.index = [str(dictbook['timestamp']) for  r in df_bmex['rank']] #+"_"+str(r)
-	# record in DB
-	df_bmex.to_sql('orderbooks',conn,if_exists='append')
-	
-	##BitFinex
-	#bfix_markets = bfix.load_markets()
-	#print(bfix.id, bfix_markets)
-	#print(bfix.fetch_order_book("BTC/USD"))
-	dictbook = bfix.fetch_order_book("BTC/USD")
-	a = pd.DataFrame(dictbook['asks'],columns=['askprice','askqty'])
-	a['rank']=a.index.values
-	b = pd.DataFrame(dictbook['bids'],columns=['bidprice','bidqty'])
-	b['rank']=b.index.values
-	df_bfix = pd.merge(a,b,on='rank')
-	df_bfix['source']='bitfinex'
-	df_bfix.index = [str(dictbook['timestamp']) for  r in df_bfix['rank']] #+"_"+str(r)
-	# record in DB
-	df_bfix.to_sql('orderbooks',conn,if_exists='append')
-	
-	"""
 	
 conn.close()
 
