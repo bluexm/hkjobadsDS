@@ -77,26 +77,28 @@ def get_orderbook(ccxtobj,symbol,sourcename,connexion):
 	df = pd.merge(a,b,on='rank')
 	df['source']=sourcename
 	
-	df.index = [str(dictbook['timestamp']) for  r in df['rank']] #+"_"+str(r)
+	df.index = [str(dictbook['timestamp']) for  r in df['rank']] 
 	# record in DB
 	#df.to_sql('orderbooks',connexion,if_exists='append')
 	
 	# for morph.io
 	df['timestamp']=df.index
-	dg = df.round(3)
+	df['ukey']=[str(dictbook['timestamp'])+"_"+sourcename+"_"+str(r) for  r in df['rank']]
+	dg = df.round(10)
 	for k in range(len(dg)):
 		#print(df.iloc[k].to_dict())
 		di = dg.iloc[k].to_dict()
 		print(di)
-		scraperwiki.sqlite.save(unique_keys=['timestamp'],table_name="obooks", 
+		scraperwiki.sqlite.save(unique_keys=['ukey'],table_name="obooks", 
 			data={
+				'ukey':di['ukey'], 
 				'timestamp':di['timestamp'], 
-				'bidqty':round(di['askqty'],10), 
-				'bidprice':round(di['askqty'],10), 
+				'bidqty':round(di['bidqty'],10), 
+				'bidprice':round(di['bidprice'],10), 
 				'askqty':round(di['askqty'],10), 
-				'askprice':round(di['askqty'],10), 
-				'source':round(di['askqty'],10)
-				})	
+				'askprice':round(di['askprice'],10), 
+				'source':di['source']
+				})
 		#print("done")
 
 i=0
