@@ -69,7 +69,7 @@ exmo_bgtcn   = ccxt.exmo({
 
 def get_orderbook(ccxtobj,symbol,sourcename,connexion):
 	dictbook = ccxtobj.fetch_order_book(symbol)
-	print(dictbook['asks'][0])
+	print("{} storing orderbook ".format(datetime.datetime.now(),"%d/%m/%y %H:%M:%S"))
 	a = pd.DataFrame(dictbook['asks'],columns=['askprice','askqty'])
 	a['rank']=a.index.values
 	b = pd.DataFrame(dictbook['bids'],columns=['bidprice','bidqty'])
@@ -83,13 +83,25 @@ def get_orderbook(ccxtobj,symbol,sourcename,connexion):
 	
 	# for morph.io
 	df['timestamp']=df.index
-	for k in range(len(df)):
-		print(df[k].to_dict())
-		scraperwiki.sqlite.save(unique_keys=['timestamp'], data=df.iloc[k].to_dict())
+	dg = df.round(3)
+	for k in range(len(dg)):
+		#print(df.iloc[k].to_dict())
+		di = dg.iloc[k].to_dict()
+		print(di)
+		scraperwiki.sqlite.save(unique_keys=['timestamp'],table_name="obooks", 
+			data={
+				'timestamp':di['timestamp'], 
+				'bidqty':round(di['askqty'],10), 
+				'bidprice':round(di['askqty'],10), 
+				'askqty':round(di['askqty'],10), 
+				'askprice':round(di['askqty'],10), 
+				'source':round(di['askqty'],10)
+				})	
+		#print("done")
 
 i=0
-while (i<5):
-	get_orderbook(bgtcn, "BTC/USD", 'gatecoin', conn)
+while (i<1):
+	get_orderbook(bgtcn, "BTC/USD", 'gatecoin', conn)	
 	#get_orderbook(anx, anx.symbols[0], 'anx', conn)
 	#get_orderbook(polo, "BTC/USDT", 'polo', conn)
 	#get_orderbook(bmex, "BTC/USD", 'bitmex', conn)
@@ -100,20 +112,3 @@ while (i<5):
 	
 conn.close()
 
-'''
-#print(polo.fetch_ticker('BTC/USD'))
-#dfticker = pd.read_json(polo.fetch_ticker('BTC/USD'))
-
-#print(polo.fetch_trades('BTC/USD'))
-#print(exmo.fetch_balance())
-
-# sell one ฿ for market price and receive $ right now
-print(exmo.id, exmo.create_market_sell_order('BTC/USD', 1))
-
-# limit buy BTC/EUR, you pay €2500 and receive ฿1  when the order is closed
-print(exmo.id, exmo.create_limit_buy_order('BTC/EUR', 1, 2500.00))
-
-# pass/redefine custom exchange-specific order params: type, amount, price, flags, etc...
-kraken.create_market_buy_order('BTC/USD', 1, {'trading_agreement': 'agree'})
-
-'''
