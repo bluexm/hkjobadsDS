@@ -88,7 +88,7 @@ def get_orderbook(ccxtobj,symbol,sourcename,connexion):
 	for k in range(len(dg)):
 		#print(df.iloc[k].to_dict())
 		di = dg.iloc[k].to_dict()
-		print(di)
+		#print(di)
 		scraperwiki.sqlite.save(unique_keys=['ukey'],table_name="obooks", 
 			data={
 				'ukey':di['ukey'], 
