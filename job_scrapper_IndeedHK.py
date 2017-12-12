@@ -10,15 +10,16 @@ import Levenshtein as levs
 import scraperwiki as ws 
 
 ## user params 
-url ='https://www.indeed.hk/jobs?q=Data+Scientist&start='
-nbpagesmax = 10
+URL ='https://www.indeed.hk/jobs?q=Data+Scientist&start='
+NBPAGESMAX = 10
+RECORD_DB = True 
+RECORD_EXCEL = True 
+RECORD_CSV = True
 
 def dict_value(tuple):
 	return tuple[-1]
 
 exectime = datetime.datetime.now()
-	
-
 ht = urllib3.PoolManager(cert_reqs='CERT_REQUIRED',ca_certs=certifi.where())
 
 csvfile = open('scrape_indeed_'+ exectime.strftime("%Y%m%d")+'.csv', 'w', newline='',encoding="utf-8")
@@ -94,9 +95,9 @@ def parse_efinancialcareers(pdata):
 
 """ scraping from indeed.hk """ 
 res=[]
-for i in range(nbpagesmax):
+for i in range(NBPAGESMAX):
 	try:
-		r = ht.request('GET',url+ str(i+1)+'0')
+		r = ht.request('GET',URL+ str(i+1)+'0')
 		tx = r.data.decode("utf-8","ignore")
 
 		##scraping 
@@ -150,19 +151,23 @@ for i in range(nbpagesmax):
 
 			## store and display results 
 			#print(' ; '.join([str(s) for s in rowres]))
-			writer.writerow(rowres)
-			#res.append(rowres)
-			if dorecord:	
+			if RECORD_CSV:
+				writer.writerow(rowres)
+				#res.append(rowres)
+			if dorecord:
 				# in dataframe for excel 
 				df = df.append( pd.DataFrame([rowres],columns=df.columns))
 				# in SQLlite 
-				titles = ["epoch","scrping_dt","ad_cie_indeed","ad_jobtitle_indeed","search_ad_url","ad_url","ad_jobdate","ad_jobtitle","ad_jobcie","ad_jobdes","ad_email"] 
-				ws.sqlite.save(unique_keys=['ad_url'], table_name="indeed_ads", data={x:y for (x,y) in zip(titles,rowres)} )
+				if RECORD_DB:
+					titles = ["epoch","scrping_dt","ad_cie_indeed","ad_jobtitle_indeed","search_ad_url","ad_url","ad_jobdate","ad_jobtitle","ad_jobcie","ad_jobdes","ad_email"] 
+					ws.sqlite.save(unique_keys=['ad_url'], table_name="indeed_ads", data={x:y for (x,y) in zip(titles,rowres)} )
 	except: 
 		pass
-
-
-			
+		
 print("end of scraping ---------------------------------------------------------")
-df.to_excel(excelDBfilename, sheet_name='Sheet1', index=False)
+
+if RECORD_EXCEL:
+	df.to_excel(excelDBfilename, sheet_name='Sheet1', index=False)
 csvfile.close()
+
+
