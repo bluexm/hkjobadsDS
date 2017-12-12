@@ -134,7 +134,6 @@ for i in range(NBPAGESMAX):
 		tree = bs4.BeautifulSoup(tx, 'html.parser')
 		#print(tree.prettify())
 		content = tree.find_all("div",class_=re.compile("row"))
-		
 
 		## iterates on all search results 
 		for c in content:
@@ -163,7 +162,9 @@ for i in range(NBPAGESMAX):
 
 			## check if ad is already here or not
 			dorecord=True
-			print('\n', len(adlink), adlink)
+			print('recording page ', adlink)
+			'''' 
+			commented since levenshtein not avialbale in morph.io and check is done vs df coming from Excel worksheet 
 			for k in df['search_ad_url']:
 				#Levenshtein not in Morph.io --> commented 	
 				#ldist = levs.distance(adlink,k)
@@ -171,8 +172,10 @@ for i in range(NBPAGESMAX):
 				##print(ldist, ldistratio,end = ' ')
 				#if ldistratio>0.95:
 				if adlink == k:  # if urls are the same don't store 
+					print("adlink", adlink, " k  ; ",k)
 					dorecord=False
 					break
+			'''	
 
 			## store and display results 
 			#print(' ; '.join([str(s) for s in rowres]))
@@ -185,6 +188,7 @@ for i in range(NBPAGESMAX):
 					df = df.append( pd.DataFrame([rowres],columns=df.columns))
 				# in SQLlite 
 				if RECORD_DB:
+					print("record in db")
 					titles = ["epoch","scrping_dt","ad_cie_indeed","ad_jobtitle_indeed","search_ad_url","ad_url","ad_jobdate","ad_jobtitle","ad_jobcie","ad_jobdes","ad_email"] 
 					ws.sqlite.save(unique_keys=['ad_url'], table_name="indeed_ads", data={x:y for (x,y) in zip(titles,rowres)} )
 	except: 
