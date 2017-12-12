@@ -11,10 +11,10 @@ import scraperwiki as ws
 
 ## user params 
 URL ='https://www.indeed.hk/jobs?q=Data+Scientist&start='
-NBPAGESMAX = 10
-RECORD_DB = True 
-RECORD_EXCEL = True 
-RECORD_CSV = True
+NBPAGESMAX = 10 	# number of pages for search results 
+RECORD_EXCEL = False # only not previously recorded ads are stored in the excel file 
+RECORD_CSV = False  # all search results are stores in the CSV 
+RECORD_DB = True 	# record in DB with wikiscraper (for morph.io) 
 
 def dict_value(tuple):
 	return tuple[-1]
