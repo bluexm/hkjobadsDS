@@ -6,7 +6,7 @@ import requests as rqs
 import csv
 import datetime 
 import pandas as pd 
-import Levenshtein as levs 
+#import Levenshtein as levs 
 import scraperwiki as ws
 import pdb 
 
@@ -164,10 +164,12 @@ for i in range(NBPAGESMAX):
 			dorecord=True
 			print('\n', len(adlink), adlink)
 			for k in df['search_ad_url']:
-				ldist = levs.distance(adlink,k)
-				ldistratio = (len(k)-ldist)/len(adlink)
-				#print(ldist, ldistratio,end = ' ')
-				if ldistratio>0.95:
+				#Levenshtein not in Morph.io --> commented 	
+				#ldist = levs.distance(adlink,k)
+				#ldistratio = (len(k)-ldist)/len(adlink)
+				##print(ldist, ldistratio,end = ' ')
+				#if ldistratio>0.95:
+				if adlink == k:  # if urls are the same don't store 
 					dorecord=False
 					break
 
