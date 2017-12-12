@@ -23,8 +23,9 @@ def dict_value(tuple):
 exectime = datetime.datetime.now()
 ht = urllib3.PoolManager(cert_reqs='CERT_REQUIRED',ca_certs=certifi.where())
 # init csv 
-csvfile = open('scrape_indeed_'+ exectime.strftime("%Y%m%d")+'.csv', 'w', newline='',encoding="utf-8")
-writer = csv.writer(csvfile, delimiter=';', quotechar="'", quoting=csv.QUOTE_MINIMAL)
+if RECORD_CSV:
+	csvfile = open('scrape_indeed_'+ exectime.strftime("%Y%m%d")+'.csv', 'w', newline='',encoding="utf-8")
+	writer = csv.writer(csvfile, delimiter=';', quotechar="'", quoting=csv.QUOTE_MINIMAL)
 # init dataframe 
 if RECORD_EXCEL:
 	excelDBfilename = 'scraping_indeed.xlsx'
@@ -193,6 +194,7 @@ print("end of scraping ---------------------------------------------------------
 
 if RECORD_EXCEL:
 	df.to_excel(excelDBfilename, sheet_name='Sheet1', index=False)
-csvfile.close()
+if RECORD_CSV:
+	csvfile.close()
 
 
