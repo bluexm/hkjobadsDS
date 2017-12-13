@@ -1,7 +1,6 @@
 
 Introduction 
 --
-This is a scraper that runs on [Morph](https://morph.io). To get started [see the documentation](https://morph.io/documentation)
 
 This scraper is aimed at gathering Data science job ads in Hongkong, in order to sense the increasing activity of this discipline 
 
