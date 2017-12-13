@@ -7,7 +7,7 @@ import csv
 import datetime 
 import pandas as pd 
 #import Levenshtein as levs 
-import scraperwiki as ws
+#import scraperwiki as ws
 import pdb 
 
 ## user params 
