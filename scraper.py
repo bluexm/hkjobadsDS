@@ -1,6 +1,4 @@
 import bs4
-import certifi
-import urllib3
 import re
 import requests as rqs
 import csv
@@ -17,7 +15,7 @@ RECORD_EXCEL = False # only not previously recorded ads are stored in the excel 
 RECORD_CSV = False  # all search results are stores in the CSV 
 RECORD_DB = True 	# record in DB with wikiscraper (for morph.io)
 USE_SCRAPERWIKI = False # if recorddb = True then use scraperwiki or SQLlite directly 
-DB_FILE = "jobads.db"
+DB_FILE = "data.sqlite"
 DB_TITLES = ["epoch","scrping_dt","ad_cie_indeed","ad_jobtitle_indeed","search_ad_url","ad_url","ad_jobdate","ad_jobtitle","ad_jobcie","ad_jobdes","ad_email"] 	
 
 if not USE_SCRAPERWIKI:
@@ -33,7 +31,6 @@ def dict_value(tuple):
 	return tuple[-1]
 
 exectime = datetime.datetime.now()
-ht = urllib3.PoolManager(cert_reqs='CERT_REQUIRED',ca_certs=certifi.where())
 
 # init csv 
 if RECORD_CSV:
@@ -154,15 +151,17 @@ res=[]
 for i in range(NBPAGESMAX):
 	try:
 		print('searching  ', URL+ str(i+1)+'0')
-		#print(ht)
-		r = ht.request('GET',URL+ str(i+1)+'0')
-		#print(r.data)
-		tx = r.data.decode("utf-8","ignore")
+		#r = ht.request('GET',URL+ str(i+1)+'0')
+		r = rqs.get(URL+ str(i+1)+'0')
+		#tx = r.data.decode("utf-8","ignore")
+		tx = r.content
 		#print(tx)
+		
 		##scraping 
 		tree = bs4.BeautifulSoup(tx, 'html.parser')
 		#print(tree.prettify())
 		content = tree.find_all("div",class_=re.compile("row"))
+		#print(content)
 		
 		## iterates on all search results 
 		for c in content:
