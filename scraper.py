@@ -6,19 +6,19 @@ import datetime
 import pandas as pd 
 #import Levenshtein as levs 
 #import scraperwiki as ws
-import pdb 
+import pdb
 
 ## user params 
 URL ='https://www.indeed.hk/jobs?q=Data+Scientist&start='
 NBPAGESMAX = 10 	# number of pages for search results 
-RECORD_EXCEL = False # only not previously recorded ads are stored in the excel file 
-RECORD_CSV = False  # all search results are stores in the CSV 
-RECORD_DB = True 	# record in DB with wikiscraper (for morph.io)
+RECORD_EXCEL = True # only not previously recorded ads are stored in the excel file 
+RECORD_CSV = True  # all search results are stores in the CSV 
+RECORD_DB = False 	# record in DB with wikiscraper (for morph.io)
 USE_SCRAPERWIKI = False # if recorddb = True then use scraperwiki or SQLlite directly 
 DB_FILE = "data.sqlite"
 DB_TITLES = ["epoch","scrping_dt","ad_cie_indeed","ad_jobtitle_indeed","search_ad_url","ad_url","ad_jobdate","ad_jobtitle","ad_jobcie","ad_jobdes","ad_email"] 	
 
-if not USE_SCRAPERWIKI:
+if RECORD_DB and not USE_SCRAPERWIKI:
 	import sqlite3
 	from sqlite3 import Error
 	try:
@@ -173,9 +173,10 @@ for i in range(NBPAGESMAX):
 			rowres.append(c.find_all("a",class_="turnstileLink")[0].get_text())
 			adlink = 'https://www.indeed.hk'+ c.find_all("a",class_="turnstileLink")[0]['href']
 			rowres.append(adlink)
-			print('ad page ', adlink)
+			
 			
 			## get ad detailed infos 
+			print('ad page ', adlink)
 			ad = rqs.get(adlink)
 			adshorturl = ad.url
 			rowres.append(adshorturl)
@@ -186,7 +187,7 @@ for i in range(NBPAGESMAX):
 				if re.findall(k,adshorturl):
 					addate, adtitle, adcompany, adjobdes,  ademail = adparsers[k](ad.text)
 					break
-			
+
 			rowres += [addate, adtitle, adjobdes, adcompany, ademail]
 
 			## check if ad is already here or not
@@ -220,12 +221,16 @@ for i in range(NBPAGESMAX):
 			## store and display results 
 			#print(' ; '.join([str(s) for s in rowres]))
 			if RECORD_CSV:
+				print("write csv")
 				writer.writerow(rowres)
 				#res.append(rowres)
 			if dorecord:
 				# in dataframe for excel 
 				if RECORD_EXCEL:
-					df = df.append(pd.DataFrame([rowres],columns=df.columns))
+					print("record to Excel")
+					rowres2 = rowres
+					rowres2[4]=rowres2[4][:255]
+					df = df.append(pd.DataFrame([rowres2],columns=df.columns))
 				# in SQLlite 
 				if RECORD_DB:
 					if USE_SCRAPERWIKI:
