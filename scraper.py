@@ -12,7 +12,7 @@ import pdb
 
 ## user params 
 URL ='https://www.indeed.hk/jobs?q=Data+Scientist&start='
-NBPAGESMAX = 10 	# number of pages for search results 
+NBPAGESMAX = 1 	# number of pages for search results 
 RECORD_EXCEL = False # only not previously recorded ads are stored in the excel file 
 RECORD_CSV = False  # all search results are stores in the CSV 
 RECORD_DB = True 	# record in DB with wikiscraper (for morph.io) 
@@ -22,6 +22,7 @@ def dict_value(tuple):
 
 exectime = datetime.datetime.now()
 ht = urllib3.PoolManager(cert_reqs='CERT_REQUIRED',ca_certs=certifi.where())
+
 # init csv 
 if RECORD_CSV:
 	csvfile = open('scrape_indeed_'+ exectime.strftime("%Y%m%d")+'.csv', 'w', newline='',encoding="utf-8")
@@ -127,14 +128,17 @@ adparsers = {	"workinginhongkong": parse_workinginhongkong,
 res=[]
 for i in range(NBPAGESMAX):
 	try:
+		print('searching  ', URL+ str(i+1)+'0')
+		print(ht)
 		r = ht.request('GET',URL+ str(i+1)+'0')
+		print(r.data)
 		tx = r.data.decode("utf-8","ignore")
-
+		print(tx)
 		##scraping 
 		tree = bs4.BeautifulSoup(tx, 'html.parser')
-		#print(tree.prettify())
+		print(tree.prettify())
 		content = tree.find_all("div",class_=re.compile("row"))
-
+		
 		## iterates on all search results 
 		for c in content:
 			rowres=[exectime.timestamp(), exectime.strftime("%Y-%m-%d %H:%M:%S")]
@@ -145,6 +149,7 @@ for i in range(NBPAGESMAX):
 			rowres.append(c.find_all("a",class_="turnstileLink")[0].get_text())
 			adlink = 'https://www.indeed.hk'+ c.find_all("a",class_="turnstileLink")[0]['href']
 			rowres.append(adlink)
+			print('ad page ', adlink)
 			
 			## get ad detailed infos 
 			ad = rqs.get(adlink)
@@ -162,7 +167,7 @@ for i in range(NBPAGESMAX):
 
 			## check if ad is already here or not
 			dorecord=True
-			print('recording page ', adlink)
+			
 			'''' 
 			commented since levenshtein not avialbale in morph.io and check is done vs df coming from Excel worksheet 
 			for k in df['search_ad_url']:
