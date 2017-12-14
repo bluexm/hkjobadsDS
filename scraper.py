@@ -7,7 +7,7 @@ import pandas as pd
 #import Levenshtein as levs 
 #import scraperwiki as ws
 import pdb
-
+ 
 ## user params 
 URL ='https://www.indeed.hk/jobs?q=Data+Scientist&start='
 NBPAGESMAX = 10 	# number of pages for search results 
