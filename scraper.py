@@ -174,7 +174,6 @@ for i in range(NBPAGESMAX):
 			adlink = 'https://www.indeed.hk'+ c.find_all("a",class_="turnstileLink")[0]['href']
 			rowres.append(adlink)
 			
-			
 			## get ad detailed infos 
 			print('ad page ', adlink)
 			ad = rqs.get(adlink)
