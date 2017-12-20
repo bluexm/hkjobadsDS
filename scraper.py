@@ -150,7 +150,7 @@ adparsers = {	"workinginhongkong": parse_workinginhongkong,
 			}
 
 res=[]
-for i in range(NBPAGESMAX,NBPAGESMAX+3):
+for i in range(NBPAGESMAX):
 	try:
 		print('searching  ', URL+ str(i+1)+'0')
 		#r = ht.request('GET',URL+ str(i+1)+'0')
