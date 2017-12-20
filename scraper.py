@@ -10,7 +10,7 @@ import pdb
  
 ## user params 
 URL ='https://www.indeed.hk/jobs?q=Data+Scientist&start='
-NBPAGESMAX = 10 	# number of pages for search results 
+NBPAGESMAX = 1 	# number of pages for search results 
 RECORD_EXCEL = False # only not previously recorded ads are stored in the excel file 
 RECORD_CSV = False  # all search results are stores in the CSV 
 RECORD_DB = True 	# record in DB with wikiscraper (for morph.io)
@@ -237,7 +237,6 @@ for i in range(NBPAGESMAX):
 						ws.sqlite.save(unique_keys=['ad_url'], table_name="indeed_ads", data={x:y for (x,y) in zip(DB_TITLES,rowres)} )
 					else:
 						print("record in local db")
-						import pdb
 						#pdb.set_trace()
 						dfdb = dfdb.append(pd.DataFrame([rowres],columns=dfdb.columns), ignore_index=True)
 
