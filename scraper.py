@@ -11,9 +11,9 @@ import pdb
 ## user params 
 URL ='https://www.indeed.hk/jobs?q=Data+Scientist&start='
 NBPAGESMAX = 10 	# number of pages for search results 
-RECORD_EXCEL = True # only not previously recorded ads are stored in the excel file 
-RECORD_CSV = True  # all search results are stores in the CSV 
-RECORD_DB = False 	# record in DB with wikiscraper (for morph.io)
+RECORD_EXCEL = False # only not previously recorded ads are stored in the excel file 
+RECORD_CSV = False  # all search results are stores in the CSV 
+RECORD_DB = True 	# record in DB with wikiscraper (for morph.io)
 USE_SCRAPERWIKI = False # if recorddb = True then use scraperwiki or SQLlite directly 
 DB_FILE = "data.sqlite"
 DB_TITLES = ["epoch","scrping_dt","ad_cie_indeed","ad_jobtitle_indeed","search_ad_url","ad_url","ad_jobdate","ad_jobtitle","ad_jobcie","ad_jobdes","ad_email"] 	
@@ -175,7 +175,7 @@ for i in range(NBPAGESMAX):
 			rowres.append(adlink)
 			
 			## get ad detailed infos 
-			print('ad page ', adlink)
+			print('ad page ', adlink[:50] + '...', end='')
 			ad = rqs.get(adlink)
 			adshorturl = ad.url
 			rowres.append(adshorturl)
@@ -252,5 +252,5 @@ if RECORD_DB and not USE_SCRAPERWIKI:
 	dfdb.to_sql('indeed_ads',CONNEXION,if_exists='append', index=False)
 if RECORD_CSV:
 	csvfile.close()
-if CONNEXION:
+if RECORD_DB and not USE_SCRAPERWIKI:
 	CONNEXION.close()
