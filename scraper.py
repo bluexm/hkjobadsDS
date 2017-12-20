@@ -10,13 +10,14 @@ import pdb
  
 ## user params 
 URL ='https://www.indeed.hk/jobs?q=Data+Scientist&start='
-NBPAGESMAX = 1 	# number of pages for search results 
+NBPAGESMAX = 5 	# number of pages for search results 
 RECORD_EXCEL = False # only not previously recorded ads are stored in the excel file 
 RECORD_CSV = False  # all search results are stores in the CSV 
 RECORD_DB = True 	# record in DB with wikiscraper (for morph.io)
 USE_SCRAPERWIKI = False # if recorddb = True then use scraperwiki or SQLlite directly 
 DB_FILE = "data.sqlite"
-DB_TITLES = ["epoch","scrping_dt","ad_cie_indeed","ad_jobtitle_indeed","search_ad_url","ad_url","ad_jobdate","ad_jobtitle","ad_jobcie","ad_jobdes","ad_email"] 	
+DB_TITLES = ["epoch","scrping_dt","ad_cie_indeed","ad_jobtitle_indeed","search_ad_url","ad_url","ad_jobdate",  
+				"ad_jobtitle","ad_jobcie","ad_jobdes","ad_email"] 	
 
 if RECORD_DB and not USE_SCRAPERWIKI:
 	import sqlite3
@@ -80,9 +81,10 @@ def parse_indeed(pdata):
 		adtitle = ''.join([s for s in root.find("b", class_="jobtitle").stripped_strings])
 		adcompany = root.find("span", class_="company").string
 		adjobdes = ''.join([s for s in root.find("span", id="job_summary").stripped_strings])
-		ademail = re.findall("[.\w]*@+\w+.com",pdata)
-		if ademail ==[]: ademail='NA'
-	return addate, adtitle, adjobdes, adcompany, ademail
+		print(adjobdes)
+		ademail = ';'.join(re.findall("[.\w]*@+\w+.com",pdata))
+		if ademail =='': ademail='NA'
+	return addate, adtitle, str(adjobdes), adcompany, ademail
 	
 def parse_gobee(pdata):
 	adtree = bs4.BeautifulSoup(pdata, 'html.parser')
@@ -131,7 +133,7 @@ def parse_efinancialcareers(pdata):
 		adtitle = ''.join([s for s in adtree.find("h1", itemprop="title").stripped_strings])	
 		adcompany = ''.join([s for s in adtree.find("span", itemprop="hiringOrganization").stripped_strings])
 		adjobdes = ''.join([s for s in adtree.find("div", itemprop="description").stripped_strings])
-		ademail = re.findall("[.\w]+@+\w+.com",pdata)
+		ademail = ';'.join(re.findall("[.\w]+@+\w+.com",pdata))
 		if ademail ==[]: ademail='NA'
 	return addate, adtitle, adjobdes, adcompany, ademail
 	
@@ -148,7 +150,7 @@ adparsers = {	"workinginhongkong": parse_workinginhongkong,
 			}
 
 res=[]
-for i in range(NBPAGESMAX):
+for i in range(NBPAGESMAX,NBPAGESMAX+3):
 	try:
 		print('searching  ', URL+ str(i+1)+'0')
 		#r = ht.request('GET',URL+ str(i+1)+'0')
@@ -184,7 +186,11 @@ for i in range(NBPAGESMAX):
 			addate, adtitle, adcompany, adjobdes,  ademail = 'NotParsed','NotParsed','NotParsed','NotParsed','NotParsed'
 			for k in adparsers.keys():
 				if re.findall(k,adshorturl):
+					#print(k)
 					addate, adtitle, adcompany, adjobdes,  ademail = adparsers[k](ad.text)
+					#print(type(addate), type(adtitle), type(adcompany), type(adjobdes),  type(ademail))
+					adjobdes = str(adjobdes)
+					#print(type(addate), type(adtitle), type(adcompany), type(adjobdes),  type(ademail))
 					break
 
 			rowres += [addate, adtitle, adjobdes, adcompany, ademail]
@@ -213,7 +219,7 @@ for i in range(NBPAGESMAX):
 				##print(ldist, ldistratio,end = ' ')
 				#if ldistratio>0.95:
 				if adlink == k:  # if urls are the same don't store 
-					print("adlink already recorded : ")
+					print("adlink already recorded")
 					dorecord=False
 					break
 			
@@ -248,6 +254,7 @@ print("end of scraping ---------------------------------------------------------
 if RECORD_EXCEL:
 	df.to_excel(excelDBfilename, sheet_name='Sheet1', index=False)
 if RECORD_DB and not USE_SCRAPERWIKI:
+	#pdb.set_trace()
 	dfdb.to_sql('indeed_ads',CONNEXION,if_exists='append', index=False)
 if RECORD_CSV:
 	csvfile.close()
