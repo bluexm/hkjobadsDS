@@ -7,10 +7,7 @@ import pandas as pd
 #import Levenshtein as levs 
 #import scraperwiki as ws
 import pdb
- 
 ## user params 
-URL ='https://www.indeed.hk/jobs?q=Data+Scientist&start='
-NBPAGESMAX = 5 	# number of pages for search results 
 RECORD_EXCEL = False # only not previously recorded ads are stored in the excel file 
 RECORD_CSV = False  # all search results are stores in the CSV 
 RECORD_DB = True 	# record in DB with wikiscraper (for morph.io)
@@ -105,7 +102,6 @@ def parse_gobee(pdata):
 def parse_classywheeler(pdata):
 	return '','','','',''
 
-	
 ## NOT FINISHED !!!
 def parse_whub(pdata):
 	pdb.set_trace()
@@ -137,7 +133,6 @@ def parse_efinancialcareers(pdata):
 		if ademail ==[]: ademail='NA'
 	return addate, adtitle, adjobdes, adcompany, ademail
 	
-""" scraping from indeed.hk """ 
 
 ## declare parser functions to use according to site url (or word in the url)
 adparsers = {	"workinginhongkong": parse_workinginhongkong, 
@@ -167,13 +162,9 @@ for i in range(NBPAGESMAX):
 		
 		## iterates on all search results 
 		for c in content:
-			rowres=[exectime.timestamp(), exectime.strftime("%Y-%m-%d %H:%M:%S")]
 			#rowres.append(c.find_all("span",class_="company")[0].get_text())
 			#records company's listed on search
 			#pdb.set_trace()
-			rowres.append(''.join([s for s in c.find_all("span",class_="company")[0].stripped_strings]))
-			rowres.append(c.find_all("a",class_="turnstileLink")[0].get_text())
-			adlink = 'https://www.indeed.hk'+ c.find_all("a",class_="turnstileLink")[0]['href']
 			rowres.append(adlink)
 			
 			## get ad detailed infos 
@@ -205,12 +196,10 @@ for i in range(NBPAGESMAX):
 				#ldist = levs.distance(adlink,k)
 				#ldistratio = (len(k)-ldist)/len(adlink)
 				##print(ldist, ldistratio,end = ' ')
-				#if ldistratio>0.95:
 				if adlink == k:  # if urls are the same don't store 
 					print("adlink", adlink, " k  ; ",k)
 					dorecord=False
 					break
-			'''	
 
 			for k in dfdb['search_ad_url']:
 				#Levenshtein not in Morph.io --> commented 	
@@ -229,7 +218,6 @@ for i in range(NBPAGESMAX):
 				print("write csv")
 				writer.writerow(rowres)
 				#res.append(rowres)
-			if dorecord:
 				# in dataframe for excel 
 				if RECORD_EXCEL:
 					print("record to Excel")
@@ -245,7 +233,6 @@ for i in range(NBPAGESMAX):
 						print("record in local db")
 						#pdb.set_trace()
 						dfdb = dfdb.append(pd.DataFrame([rowres],columns=dfdb.columns), ignore_index=True)
-
 	except: 
 		pass
 		
@@ -257,6 +244,3 @@ if RECORD_DB and not USE_SCRAPERWIKI:
 	#pdb.set_trace()
 	dfdb.to_sql('indeed_ads',CONNEXION,if_exists='append', index=False)
 if RECORD_CSV:
-	csvfile.close()
-if RECORD_DB and not USE_SCRAPERWIKI:
-	CONNEXION.close()
