@@ -5,7 +5,7 @@ import csv
 import datetime 
 import pandas as pd
 #import Levenshtein as levs 
-#import scraperwiki as ws
+#import scraperwiki as ws *** DEPRECATED *** 
 import pdb
 
 ## user params 
@@ -13,12 +13,12 @@ NBPAGESMAX = 10 	# number of pages for search results
 RECORD_EXCEL = False # only not previously recorded ads are stored in the excel file 
 RECORD_CSV = False  # all search results are stores in the CSV 
 RECORD_DB = True 	# record in DB with wikiscraper (for morph.io)
-RECORD_ALWAYSWRITE = True #always write record even if already recorded 
-USE_SCRAPERWIKI = False # if recorddb = True then use scraperwiki 
+RECORD_ALWAYSWRITE = False #always write record even if already recorded 
+USE_SCRAPERWIKI = False # if recorddb = True then use scraperwiki *** DEPRECATED *** 
 DB_FILE = "data.sqlite"
 DB_TITLES = ["timestamp","scrping_dt","ad_cie_indeed","ad_jobtitle_indeed","search_ad_url","ad_url","ad_jobdate",  \
 				"ad_jobtitle","ad_jobcie","ad_jobdes","ad_email"]
-URL ='https://www.indeed.hk/jobs?q=Data+Scientist&start='
+URL ='https://www.indeed.hk/jobs?q=Data+Scientist'
 
 if RECORD_DB and not USE_SCRAPERWIKI:
 	import sqlite3
@@ -71,102 +71,39 @@ def parse_workinginhongkong(pdata):
 
 def parse_indeed(pdata):
 	adtree = bs4.BeautifulSoup(pdata, 'html.parser')
-	root= adtree.find("table", id="job-content")
+	root= adtree.find("div", class_="jobsearch-ViewJobLayout-jobDisplay")
 	#pdb.set_trace()
+
 	if root==None: 
 		return 'NA','NA','NA','NA','NA'
 	else: 
-		addate = str(''.join([s for s in root.find("span", class_="date").stripped_strings]))
-		adtitle = ''.join([s for s in root.find("b", class_="jobtitle").stripped_strings])
-		adcompany = root.find("span", class_="company").string
-		adjobdes = ''.join([s for s in root.find("span", id="job_summary").stripped_strings])
-		print(adjobdes)
-		ademail = ';'.join(re.findall("[.\w]*@+\w+.com",pdata))
+		addate = str(list(root.find("div", class_="jobsearch-JobMetadataFooter").stripped_strings)[1])
+		adtitle = str(''.join([s for s in root.find("div", class_="jobsearch-JobInfoHeader-title-container").stripped_strings]))
+		adcompany = str(root.find("div", class_="icl-u-lg-mr--sm").string)
+		adjobdes = str(''.join([s for s in root.find("div", id="jobDescriptionText").stripped_strings]))
+		ademail = str(';'.join(re.findall("[.\w]*@+\w+.com",pdata)))
 		if ademail =='': ademail='NA'
-	return addate, adtitle, str(adjobdes), adcompany, ademail
-	
-def parse_gobee(pdata):
-	adtree = bs4.BeautifulSoup(pdata, 'html.parser')
-	adtitle = adtree.find("div", class_="job-header").find("h1").string
-	if adtitle==None: 
-		return 'NA','NA','NA','NA','NA'
-	else: 
-		st = tree.find("script", type="application/ld+json").string.title()
-		st = re.findall("Dateposted.*,",st)[0]
-		p = st.find(",")
-		addate = st[p-11:-2]
-		adcompany = "gobeebike"
-		adjobdes = ' '.join([s for s in adtree.find("div", class_="description").stripped_strings])
-		ademail = "NA"
-
 	return addate, adtitle, adjobdes, adcompany, ademail
 	
-def parse_classywheeler(pdata):
-	return '','','','',''
-
-## NOT FINISHED !!!
-def parse_whub(pdata):
-	#pdb.set_trace()
-	adtree = bs4.BeautifulSoup(pdata, 'html.parser')
-	root = adtree.find("h1", itemprop="title")
-	if root==None: 
-		return 'NA','NA','NA','NA','NA'
-	else:
-		addate = ''.join([s for s in adtree.find("p", itemprop="Created on :").stripped_strings])
-		adtitle = ''.join([s for s in adtree.find("div", class_="job-banner").findall("p")[2].stripped_strings])
-		adcompany = ''.join([s for s in adtree.find("span", itemprop="hiringOrganization").stripped_strings])
-		adjobdes = ''.join([s for s in adtree.find("p", class_="job-description").stripped_strings])
-		ademail = re.findall("[.\w]+@+\w+.com",pdata)
-		if ademail ==[]: ademail='NA'
-	return addate, adtitle, adjobdes, adcompany, ademail
-
-def parse_efinancialcareers(pdata):
-	adtree = bs4.BeautifulSoup(pdata, 'html.parser')
-	root = adtree.find("h1", itemprop="title")
-	#pdb.set_trace()
-	if root==None: 
-		return 'NA','NA','NA','NA','NA'
-	else: 
-		addate = ''.join([s for s in adtree.find("span", itemprop="datePosted").stripped_strings])
-		adtitle = ''.join([s for s in adtree.find("h1", itemprop="title").stripped_strings])	
-		adcompany = ''.join([s for s in adtree.find("span", itemprop="hiringOrganization").stripped_strings])
-		adjobdes = ''.join([s for s in adtree.find("div", itemprop="description").stripped_strings])
-		ademail = ';'.join(re.findall("[.\w]+@+\w+.com",pdata))
-		if ademail ==[]: ademail='NA'
-	return addate, adtitle, adjobdes, adcompany, ademail
-	
-## scraping from indeed.hk #######################################################
-
-## declare parser functions to use according to site url (or word in the url)
-adparsers = {	"workinginhongkong": parse_workinginhongkong, 
-				"indeed":parse_indeed,
-				"gobee":parse_gobee,
-				"efinancialcareers":parse_efinancialcareers,
-				#"whub":parse_whub,
-				#"classywheeler": parse_classywheeler, 
-				#"efinancialcareers": parse_efinancialcareers
-			}
-
 print("start of scraping ---------------------------------------------------------")
 res=[]
 for i in range(NBPAGESMAX):
 	try:
-		print('searching  ', URL+ str(i+1)+'0')
+		cURL= URL + ('&start={:d}'.format(10*i) if i>0 else '')
+		print('searching  ', ) 
 		#r = ht.request('GET',URL+ str(i+1)+'0')
-		r = rqs.get(URL+ str(i+1)+'0')
+		r = rqs.get(cURL)
 		#tx = r.data.decode("utf-8","ignore")
 		tx = r.content
 		#print(tx)
 		
-		##scraping 
+		## scraping 
 		tree = bs4.BeautifulSoup(tx, 'html.parser')
 		#print(tree.prettify())
-		content = tree.find_all("div",class_=re.compile("row"))
-		#print(content)
+		content = tree.find_all("div",class_=re.compile("row")) #get all divs with class "row" 
 		
 		## iterates on all search results 
 		for c in content:
-			#exectime.timestamp()
 			rowres=[exectime.timestamp(), exectime.strftime("%Y-%m-%d %H:%M:%S")]
 			#rowres.append(c.find_all("span",class_="company")[0].get_text())
 			#records company's listed on search
@@ -177,23 +114,14 @@ for i in range(NBPAGESMAX):
 			adlink = 'https://www.indeed.hk'+ c.find_all("a",class_="jobtitle")[0]['href']  #adlink 
 			rowres.append(adlink)
 			
-			## get ad detailed infos 
+			## get ad detailed infos
 			print('ad page ', adlink[:50] + '...', end='')
 			ad = rqs.get(adlink)
 			adshorturl = ad.url
 			rowres.append(adshorturl)
-
+	
 			##branch on correct parser
-			addate, adtitle, adcompany, adjobdes,  ademail = 'NotParsed','NotParsed','NotParsed','NotParsed','NotParsed'
-			for k in adparsers.keys():
-				if re.findall(k,adshorturl):
-					#print(k)
-					addate, adtitle, adcompany, adjobdes,  ademail = adparsers[k](ad.text)
-					#print(type(addate), type(adtitle), type(adcompany), type(adjobdes),  type(ademail))
-					adjobdes = str(adjobdes)
-					#print(type(addate), type(adtitle), type(adcompany), type(adjobdes),  type(ademail))
-					break
-
+			addate, adtitle, adcompany, adjobdes,  ademail = parse_indeed(ad.text)
 			rowres += [addate, adtitle, adjobdes, adcompany, ademail]
 
 			## check if ad is already here or not
