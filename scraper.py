@@ -48,27 +48,12 @@ if RECORD_DB and not USE_SCRAPERWIKI:
 	#pdb.set_trace()
 	dfdb = pd.DataFrame(columns=DB_TITLES)
 	# or read column titles from database 
-	# try:
-	# 	dfdb = pd.read_sql("select * from indeed_ads", CONNEXION)
-	# 	dfdb = dfdb[1:]
-	# except:
-	# 	print("database empty ; creating table")
+	try:
+		curDB = pd.read_sql("select * from indeed_ads", CONNEXION)
+	except:
+	 	print("database empty")
 		
 ## single ad page scrapers 
-def parse_workinginhongkong(pdata):
-	adtree = bs4.BeautifulSoup(pdata, 'html.parser')
-	if adtree.find("div", class_="section_header") ==None: 
-		return 'NA','NA','NA','NA','NA'
-	else: 
-		addate = ''.join([s for s in adtree.find("div", class_="section_header").find("div", class_="date").stripped_strings])
-		adtitle = ''.join([s for s in adtree.find("div", class_="section_header").find("h1", class_="title").stripped_strings])
-		adcompany = adtree.find("div", class_="section_header").p.a.string
-
-		a = [s.stripped_strings for s in adtree.find("div", class_="section_content").find_all("p")]
-		adjobdes = ''.join([''.join(s) for s in a])
-		ademail = re.findall('[.\w]*@+\w+.com',pdata)
-	return addate, adtitle, adjobdes, adcompany, ademail
-
 def parse_indeed(pdata):
 	adtree = bs4.BeautifulSoup(pdata, 'html.parser')
 	root= adtree.find("div", class_="jobsearch-ViewJobLayout-jobDisplay")
@@ -115,7 +100,7 @@ for i in range(NBPAGESMAX):
 			rowres.append(adlink)
 			
 			## get ad detailed infos
-			print('ad page ', adlink[:50] + '...', end='')
+			print('ad page ' + adlink[:50] + '...', end='')
 			ad = rqs.get(adlink)
 			adshorturl = ad.url
 			rowres.append(adshorturl)
@@ -127,29 +112,10 @@ for i in range(NBPAGESMAX):
 			## check if ad is already here or not
 			dorecord=True
 
-			'''#commented since levenshtein not available in morph.io and check is done vs df coming from Excel worksheet 
-			for k in df['search_ad_url']:
-				#Levenshtein not in Morph.io --> commented 	
-				#ldist = levs.distance(adlink,k)
-				#ldistratio = (len(k)-ldist)/len(adlink)
-				##print(ldist, ldistratio,end = ' ')
-				if adlink == k:  # if urls are the same don't store 
-				#if ldistratio>0.95:
-					print("adlink", adlink, " k  ; ",k)
-					dorecord=False
-					break
-			'''
-
-			for k in dfdb['search_ad_url']:
-				#Levenshtein not in Morph.io --> commented 	
-				#ldist = levs.distance(adlink,k)
-				#ldistratio = (len(k)-ldist)/len(adlink)
-				##print(ldist, ldistratio,end = ' ')
-				#if ldistratio>0.95:
-				if adlink == k:  # if urls are the same don't store 
-					print("adlink already recorded")
-					dorecord=False
-					break
+			#similarity = same key (ad_url)
+			if adlink in list(curDB['search_ad_url']):
+				print("ad already recorded")
+				dorecord=False
 			
 			## store and display results 
 			#print(' ; '.join([str(s) for s in rowres]))
@@ -181,6 +147,7 @@ print("end of scraping ---------------------------------------------------------
 if RECORD_DB and not USE_SCRAPERWIKI:
 	#pdb.set_trace()
 	dfdb.to_sql('indeed_ads',CONNEXION,if_exists='append', index=False)
+	print('{:d} new ads recorded'.format(len(dfdb)))
 	CONNEXION.close()
 
 if RECORD_EXCEL:
