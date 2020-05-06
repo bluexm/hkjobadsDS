@@ -51,7 +51,8 @@ if RECORD_DB and not USE_SCRAPERWIKI:
 	try:
 		curDB = pd.read_sql("select * from indeed_ads", CONNEXION)
 	except:
-	 	print("database empty")
+		print("database empty")
+		curDB = None
 		
 ## single ad page scrapers 
 def parse_indeed(pdata):
@@ -113,9 +114,12 @@ for i in range(NBPAGESMAX):
 			dorecord=True
 
 			#similarity = same key (ad_url)
-			if adlink in list(curDB['search_ad_url']):
-				print("ad already recorded")
-				dorecord=False
+			if curDB is None:
+				pass
+			else:
+				if adlink in list(curDB['search_ad_url']):
+					print("ad already recorded")
+					dorecord=False
 			
 			## store and display results 
 			#print(' ; '.join([str(s) for s in rowres]))
