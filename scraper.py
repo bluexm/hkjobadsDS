@@ -5,18 +5,19 @@ import csv
 import datetime 
 import pandas as pd
 #import Levenshtein as levs 
-#import scraperwiki as ws
+import scraperwiki as ws
 import pdb
 
 ## user params 
-NBPAGESMAX = 1 	# number of pages for search results 
+NBPAGESMAX = 10 	# number of pages for search results 
 RECORD_EXCEL = False # only not previously recorded ads are stored in the excel file 
-RECORD_CSV = True  # all search results are stores in the CSV 
+RECORD_CSV = False  # all search results are stores in the CSV 
 RECORD_DB = True 	# record in DB with wikiscraper (for morph.io)
-USE_SCRAPERWIKI = False # if recorddb = True then use scraperwiki or SQLlite directly 
+RECORD_ALWAYSWRITE = True #always write record even if already recorded 
+USE_SCRAPERWIKI = True # if recorddb = True then use scraperwiki 
 DB_FILE = "data.sqlite"
 DB_TITLES = ["timestamp","scrping_dt","ad_cie_indeed","ad_jobtitle_indeed","search_ad_url","ad_url","ad_jobdate",  \
-				"ad_jobtitle","ad_jobcie","ad_jobdes","ad_email"] 	
+				"ad_jobtitle","ad_jobcie","ad_jobdes","ad_email"]
 URL ='https://www.indeed.hk/jobs?q=Data+Scientist&start='
 
 if RECORD_DB and not USE_SCRAPERWIKI:
@@ -43,18 +44,16 @@ if RECORD_EXCEL:
 	excelDBfilename = 'scraping_indeed.xlsx'
 	df = pd.read_excel(excelDBfilename, 'Sheet1', index_col=None, na_values=['NA'])
 	
-if RECORD_DB and USE_SCRAPERWIKI: 
-	# TODO : add connection to scraper wiki to read database 
-	pass
-else: # record in lolcal database 
+if RECORD_DB and not USE_SCRAPERWIKI: 
 	#pdb.set_trace()
-	try:
-		dfdb = pd.read_sql("select * from indeed_ads", CONNEXION)
-		dfdb = dfdb[1:]
-	except:
-		dfdb = pd.DataFrame(columns=DB_TITLES)
-		print("database empty ; creating table")
-	
+	dfdb = pd.DataFrame(columns=DB_TITLES)
+	# or read column titles from database 
+	# try:
+	# 	dfdb = pd.read_sql("select * from indeed_ads", CONNEXION)
+	# 	dfdb = dfdb[1:]
+	# except:
+	# 	print("database empty ; creating table")
+		
 ## single ad page scrapers 
 def parse_workinginhongkong(pdata):
 	adtree = bs4.BeautifulSoup(pdata, 'html.parser')
@@ -107,7 +106,7 @@ def parse_classywheeler(pdata):
 
 ## NOT FINISHED !!!
 def parse_whub(pdata):
-	pdb.set_trace()
+	#pdb.set_trace()
 	adtree = bs4.BeautifulSoup(pdata, 'html.parser')
 	root = adtree.find("h1", itemprop="title")
 	if root==None: 
@@ -168,7 +167,7 @@ for i in range(NBPAGESMAX):
 		## iterates on all search results 
 		for c in content:
 			#exectime.timestamp()
-			rowres=[0, exectime.strftime("%Y-%m-%d %H:%M:%S")]
+			rowres=[exectime.timestamp(), exectime.strftime("%Y-%m-%d %H:%M:%S")]
 			#rowres.append(c.find_all("span",class_="company")[0].get_text())
 			#records company's listed on search
 			#pdb.set_trace()
@@ -230,7 +229,7 @@ for i in range(NBPAGESMAX):
 				print("write csv")
 				writer.writerow(rowres)
 				#res.append(rowres)
-			if dorecord or True:
+			if dorecord or RECORD_ALWAYSWRITE:
 				# in dataframe for excel 
 				if RECORD_EXCEL:
 					print("record to Excel")
@@ -251,11 +250,13 @@ for i in range(NBPAGESMAX):
 		
 print("end of scraping ---------------------------------------------------------")
 
-if RECORD_EXCEL:
-	df.to_excel(excelDBfilename, sheet_name='Sheet1', index=False)
 if RECORD_DB and not USE_SCRAPERWIKI:
 	#pdb.set_trace()
 	dfdb.to_sql('indeed_ads',CONNEXION,if_exists='append', index=False)
 	CONNEXION.close()
+
+if RECORD_EXCEL:
+	df.to_excel(excelDBfilename, sheet_name='Sheet1', index=False)
+
 if RECORD_CSV:
 	csvfile.close()
