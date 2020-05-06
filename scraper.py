@@ -3,18 +3,21 @@ import re
 import requests as rqs
 import csv
 import datetime 
-import pandas as pd 
+import pandas as pd
 #import Levenshtein as levs 
 #import scraperwiki as ws
 import pdb
+
 ## user params 
+NBPAGESMAX = 1 	# number of pages for search results 
 RECORD_EXCEL = False # only not previously recorded ads are stored in the excel file 
-RECORD_CSV = False  # all search results are stores in the CSV 
+RECORD_CSV = True  # all search results are stores in the CSV 
 RECORD_DB = True 	# record in DB with wikiscraper (for morph.io)
 USE_SCRAPERWIKI = False # if recorddb = True then use scraperwiki or SQLlite directly 
 DB_FILE = "data.sqlite"
-DB_TITLES = ["epoch","scrping_dt","ad_cie_indeed","ad_jobtitle_indeed","search_ad_url","ad_url","ad_jobdate",  
+DB_TITLES = ["timestamp","scrping_dt","ad_cie_indeed","ad_jobtitle_indeed","search_ad_url","ad_url","ad_jobdate",  \
 				"ad_jobtitle","ad_jobcie","ad_jobdes","ad_email"] 	
+URL ='https://www.indeed.hk/jobs?q=Data+Scientist&start='
 
 if RECORD_DB and not USE_SCRAPERWIKI:
 	import sqlite3
@@ -52,7 +55,7 @@ else: # record in lolcal database
 		dfdb = pd.DataFrame(columns=DB_TITLES)
 		print("database empty ; creating table")
 	
-""" single ad page scrapers """
+## single ad page scrapers 
 def parse_workinginhongkong(pdata):
 	adtree = bs4.BeautifulSoup(pdata, 'html.parser')
 	if adtree.find("div", class_="section_header") ==None: 
@@ -64,7 +67,7 @@ def parse_workinginhongkong(pdata):
 
 		a = [s.stripped_strings for s in adtree.find("div", class_="section_content").find_all("p")]
 		adjobdes = ''.join([''.join(s) for s in a])
-		ademail = re.findall("[.\w]*@+\w+.com",pdata)
+		ademail = re.findall('[.\w]*@+\w+.com',pdata)
 	return addate, adtitle, adjobdes, adcompany, ademail
 
 def parse_indeed(pdata):
@@ -133,6 +136,7 @@ def parse_efinancialcareers(pdata):
 		if ademail ==[]: ademail='NA'
 	return addate, adtitle, adjobdes, adcompany, ademail
 	
+## scraping from indeed.hk #######################################################
 
 ## declare parser functions to use according to site url (or word in the url)
 adparsers = {	"workinginhongkong": parse_workinginhongkong, 
@@ -144,6 +148,7 @@ adparsers = {	"workinginhongkong": parse_workinginhongkong,
 				#"efinancialcareers": parse_efinancialcareers
 			}
 
+print("start of scraping ---------------------------------------------------------")
 res=[]
 for i in range(NBPAGESMAX):
 	try:
@@ -162,9 +167,15 @@ for i in range(NBPAGESMAX):
 		
 		## iterates on all search results 
 		for c in content:
+			#exectime.timestamp()
+			rowres=[0, exectime.strftime("%Y-%m-%d %H:%M:%S")]
 			#rowres.append(c.find_all("span",class_="company")[0].get_text())
 			#records company's listed on search
 			#pdb.set_trace()
+			rowres.append(str(''.join([s for s in c.find_all("span",class_="company")[0].stripped_strings]))) #company name 
+			jobtitle= str(c.find_all("a",class_="jobtitle")[0].get_text())
+			rowres.append(jobtitle.strip())	#job title 
+			adlink = 'https://www.indeed.hk'+ c.find_all("a",class_="jobtitle")[0]['href']  #adlink 
 			rowres.append(adlink)
 			
 			## get ad detailed infos 
@@ -188,18 +199,19 @@ for i in range(NBPAGESMAX):
 
 			## check if ad is already here or not
 			dorecord=True
-			
-			'''' 
-			commented since levenshtein not avialbale in morph.io and check is done vs df coming from Excel worksheet 
+
+			'''#commented since levenshtein not available in morph.io and check is done vs df coming from Excel worksheet 
 			for k in df['search_ad_url']:
 				#Levenshtein not in Morph.io --> commented 	
 				#ldist = levs.distance(adlink,k)
 				#ldistratio = (len(k)-ldist)/len(adlink)
 				##print(ldist, ldistratio,end = ' ')
 				if adlink == k:  # if urls are the same don't store 
+				#if ldistratio>0.95:
 					print("adlink", adlink, " k  ; ",k)
 					dorecord=False
 					break
+			'''
 
 			for k in dfdb['search_ad_url']:
 				#Levenshtein not in Morph.io --> commented 	
@@ -218,6 +230,7 @@ for i in range(NBPAGESMAX):
 				print("write csv")
 				writer.writerow(rowres)
 				#res.append(rowres)
+			if dorecord or True:
 				# in dataframe for excel 
 				if RECORD_EXCEL:
 					print("record to Excel")
@@ -243,4 +256,6 @@ if RECORD_EXCEL:
 if RECORD_DB and not USE_SCRAPERWIKI:
 	#pdb.set_trace()
 	dfdb.to_sql('indeed_ads',CONNEXION,if_exists='append', index=False)
+	CONNEXION.close()
 if RECORD_CSV:
+	csvfile.close()
