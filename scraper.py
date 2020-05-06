@@ -14,7 +14,7 @@ RECORD_EXCEL = False # only not previously recorded ads are stored in the excel 
 RECORD_CSV = False  # all search results are stores in the CSV 
 RECORD_DB = True 	# record in DB with wikiscraper (for morph.io)
 RECORD_ALWAYSWRITE = True #always write record even if already recorded 
-USE_SCRAPERWIKI = True # if recorddb = True then use scraperwiki 
+USE_SCRAPERWIKI = False # if recorddb = True then use scraperwiki 
 DB_FILE = "data.sqlite"
 DB_TITLES = ["timestamp","scrping_dt","ad_cie_indeed","ad_jobtitle_indeed","search_ad_url","ad_url","ad_jobdate",  \
 				"ad_jobtitle","ad_jobcie","ad_jobdes","ad_email"]
