@@ -23,6 +23,17 @@ Analytics could bring up:
  - length of time for an ad to stay 
   
 
+Initial questions
+--
+
+- How many ads ? By time ? By company ? How do ads evolve ? 
+- what are really the jobs asked for ? 
+- Data analyst or data scientists ?
+- Mistakes and misunderstandings in the ads ?
+- General understanding (e.g. asking for "R/Python" is poor)
+- Are ads only copies of each other ? 
+- What system is used in each company ?
+
 
 Extensions
 -- 
