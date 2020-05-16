@@ -2,14 +2,30 @@
 Introduction 
 --
 
-This scraper is aimed at gathering Data science job ads in Hongkong, in order to sense the increasing activity of this discipline 
+This scraper for Morph.io is scraping job ads related to Data science in Hongkong.
+The initial objective is to observe the state and evolution of the discipline in Hong-Kong, through a dashboard or analytical related work.
 
-This can obviously be adapted to any other country ...
+The scraper currently scrapes search results obtained from indeed.hk.
 
-The scraper actually scrapes search results obtained from engine indeed.hk, and scrapes further the actual ad page for some sites only
+Analytics
+--
 
-TODO
+Analytics could bring up:
+- a view on companies: 
+  - state of companies: view on the technology stack used 
+   
+  - needs in needs of HK companies 
+  - evolution of each company: hiring turnover, past skills recruited,  
+  - level of sophistication of the company (are requirements over-asking, are they a christmas list ?)
+- an agregated view:
+  - usual stacks 
+  
+ - length of time for an ad to stay 
+  
+
+
+Extensions
 -- 
-- extend to other job boards
-- make a smarter scraper for individual pages pointed to without the need to identify each HTML tag 
+- extend to other job boards (glassdoor, ...)
+- Extend beyond DS
 - Extend to ads in Chinese (different search)
