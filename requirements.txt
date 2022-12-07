@@ -10,7 +10,7 @@
 #ccxt==1.10.252
 pandas==0.21.0
 bs4==0.0.1
-certifi==2017.11.5
+certifi==2022.12.7
 urllib3==1.22
 requests==2.20.0
 
